@@ -10,6 +10,7 @@ import ru.job4j.it.talk.model.UserConfig;
 import ru.job4j.it.talk.service.*;
 import ru.job4j.it.talk.service.ui.TgButtons;
 import ru.job4j.it.talk.service.util.LevelLangPrompt;
+import ru.job4j.it.talk.service.util.MD5Corrector;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,7 +26,9 @@ public class VoiceHandle {
     private final Analyze analyze;
     private final TgButtons tgButtons;
     private final TextToSpeech textToSpeech;
-    private final LevelLangPrompt levelLangPrompt;
+    private final TopicService topicService;
+    private final QuestionService questionService;
+    private final MD5Corrector md5Corrector;
 
     public void process(Long chatId,
                         Message message,
@@ -35,12 +38,7 @@ public class VoiceHandle {
         var analyzeMessageId = receive.apply(
                 Content.of().chatId(chatId)
                         .text("🔄 _Анализирую голосовое сообщение ..._").build());
-        var lang = userService.findUserConfigByKey(user.getId(), UserConfigKey.TARGET_LANG)
-                .orElse(new UserConfig(-1L, user, UserConfigKey.TARGET_LANG.key, "en"))
-                .getValue();
-        var level = userService.findUserConfigByKey(user.getId(), UserConfigKey.TARGET_LANG)
-                .orElse(new UserConfig(-1L, user, UserConfigKey.LEVEL_LANG.key, "A1"))
-                .getValue();
+        var lang = "ru";
         var originText = speechToText.convert(originVoice, lang);
         receive.apply(
                 Content.of().chatId(chatId)
@@ -48,55 +46,43 @@ public class VoiceHandle {
         );
         var resp = String.format("🗣️ *Вы [%s]*:\n%s ", lang, originText);
         var recognitionMessageId = receive.apply(
-                Content.of().chatId(chatId).text(resp)
-                        .buttons(tgButtons.recommendationAndTranslation()).build()
+                Content.of().chatId(chatId).text(resp).build()
         );
         analyze.processVoice(user, originVoice, originText, lang, recognitionMessageId, "", receive);
-        var audioMessageId = receive.apply(
-                Content.of().chatId(chatId).text("🎙️ _Создаю аудио..._").build()
-        );
-        textToSpeech.textToVoice(originVoice, lang);
-        var mp3File = Paths.get(originVoice.getParent().toString(),
-                originVoice.getFileName().toString().replace(".ogg", ".mp3"));
-        receive.apply(
-                Content.of().chatId(chatId)
-                        .voice(mp3File).build()
-        );
-        receive.apply(
-                Content.of().chatId(chatId)
-                        .deleteMessageId(audioMessageId).build()
-        );
         var botCallMessageId = receive.apply(
                 Content.of().chatId(chatId).text("🔄 _Генерирую ответ..._").build()
         );
-        var botText = gigaChatService.callRole(levelLangPrompt.prompt(level), originText, chatId);
-        var botMessageId = receive.apply(
+        var questionId = userService.findUserConfigByKey(user.getId(), UserConfigKey.QUESTION_ID);
+        if (questionId.isEmpty()) {
+            receive.apply(
+                    Content.of()
+                            .chatId(chatId)
+                            .text("Выберите вопрос.")
+                            .build()
+            );
+            return;
+        }
+        var question = questionService.findById(Long.parseLong(questionId.get().getValue()));
+        var topic = topicService.findById(question.getTopicId());
+        var req = new StringBuilder();
+        req.append("Оцени мой ответ на вопрос в баллах от 0 до 100. ");
+        req.append("Тема: ")
+                .append(md5Corrector.extractTextFromHtml(topic.getName()))
+                .append(". Вопрос: ").append(md5Corrector.extractTextFromHtml(question.getDescription())).append(". ");
+        req.append("Мой ответ: ").append(originText).append(". ");
+        req.append("Формат твоего ответа: Балл: [0 до 100] ");
+        System.out.println(req);
+        var botText = gigaChatService.callWithoutSystem(originText, chatId);
+        receive.apply(
                 Content.of()
                         .chatId(chatId)
                         .text(String.format("🗣️ *Бот [%s]*:\n%s", lang, botText))
-                        .buttons(tgButtons.translate())
                         .build()
         );
         receive.apply(
                 Content.of()
                         .chatId(chatId)
                         .deleteMessageId(botCallMessageId)
-                        .build()
-        );
-        var audioBotMessageId = receive.apply(
-                Content.of().chatId(chatId).text("🎙️ _Создаю аудио..._").build()
-        );
-        var botAudio = textToSpeech.process(originVoice.getParent(), botMessageId, botText, lang);
-        receive.apply(
-                Content.of()
-                        .chatId(chatId)
-                        .voice(botAudio)
-                        .build()
-        );
-        receive.apply(
-                Content.of()
-                        .chatId(chatId)
-                        .deleteMessageId(audioBotMessageId)
                         .build()
         );
     }

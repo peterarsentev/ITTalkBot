@@ -13,4 +13,4 @@ git rebase
 
 mvn clean package -DskipTests=true
 
-nohup java "-Dspring.config.location=file:./talksharp.properties" -jar target/talksharp-1.0.0.jar &
+nohup java "-Dspring.config.location=file:./ittalkbot.properties" -jar target/ittalkbot-1.0.0.jar &

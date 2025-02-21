@@ -5,8 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.job4j.it.talk.content.Content;
 import ru.job4j.it.talk.model.User;
-import ru.job4j.it.talk.model.UserStatistic;
-import ru.job4j.it.talk.repository.UserStatisticRepository;
 import ru.job4j.it.talk.service.ui.TgButtons;
 
 import java.util.HashMap;
@@ -16,87 +14,9 @@ import java.util.function.Function;
 @AllArgsConstructor
 @Slf4j
 public class StatisticService {
-    private UserStatisticRepository userStatisticRepository;
     private TgButtons tgButtons;
 
     public void process(User user, Function<Content, Integer> receive) {
-        var allStatistics = userStatisticRepository.findAllByOrderByVocabularySizeDesc();
-        var message = new StringBuilder("📚 *Статистика словаря*:\n\n");
-        int topCount = Math.min(30, allStatistics.size());
-        for (int i = 0; i < topCount; i++) {
-            UserStatistic stat = allStatistics.get(i);
-            var flagEmoji = flagEmoji(stat.getLang());
-            String rankEmoji = "";
-            if (i == 0) {
-                rankEmoji = "🥇"; // Gold
-            } else if (i == 1) {
-                rankEmoji = "🥈"; // Silver
-            } else if (i == 2) {
-                rankEmoji = "🥉"; // Bronze
-            }
-            if (stat.getUser().equals(user)) {
-                message.append(String.format("%d. %s *%d* сл. %s *%s*\n  %s, %s\n",
-                        i + 1, rankEmoji, stat.getVocabularySize(), flagEmoji,
-                        stat.getUser().getName().replaceAll("_", " "),
-                        determineVocabularyLevel(stat.getVocabularySize()), timeLabel(stat.getSpentTime())));
-            } else {
-                message.append(String.format("%d. %s *%d* сл. %s %s\n   %s, %s\n",
-                        i + 1, rankEmoji, stat.getVocabularySize(), flagEmoji,
-                        stat.getUser().getName().replaceAll("_", " "),
-                        determineVocabularyLevel(stat.getVocabularySize()), timeLabel(stat.getSpentTime())));
-            }
-            message.append("\n");
-        }
-
-        // Find user's rank
-        int userRank = -1;
-        for (int i = 0; i < allStatistics.size(); i++) {
-            if (allStatistics.get(i).getUser().equals(user)) {
-                userRank = i;
-                break;
-            }
-        }
-
-        // If user is ranked higher than 5, show nearby ranks
-        if (userRank >= 5) {
-            message.append("\n...\n");
-            int start = Math.max(0, userRank - 3);
-            for (int i = start; i <= userRank; i++) {
-                UserStatistic stat = allStatistics.get(i);
-                var flagEmoji = flagEmoji(stat.getLang());
-                String rankEmoji = "";
-
-                // Add emoji for first three positions
-                if (i == 0) {
-                    rankEmoji = "🥇"; // Gold
-                } else if (i == 1) {
-                    rankEmoji = "🥈"; // Silver
-                } else if (i == 2) {
-                    rankEmoji = "🥉"; // Bronze
-                }
-
-                // Formatting message based on user rank
-                if (stat.getUser().equals(user)) {
-                    message.append(String.format("%d. %s *%d* слов %s *%s*\n\n*%s*, *%s*\n",
-                            i + 1, rankEmoji, stat.getVocabularySize(), flagEmoji,
-                            stat.getUser().getName().replaceAll("_", " "),
-                            determineVocabularyLevel(stat.getVocabularySize()), timeLabel(stat.getSpentTime())));
-                } else {
-                    message.append(String.format("%d. %s *%d* слов %s *%s*\n\n*%s*, *%s*\n",
-                            i + 1, rankEmoji, stat.getVocabularySize(), flagEmoji,
-                            stat.getUser().getName().replaceAll("_", " "),
-                            determineVocabularyLevel(stat.getVocabularySize()), timeLabel(stat.getSpentTime())));
-                }
-            }
-        }
-
-        message.append(String.format("\n📊 Всего пользователей: %s", allStatistics.size()));
-        receive.apply(Content.of()
-                .chatId(user.getChatId())
-                .text(message.toString())
-                .buttons(tgButtons.hide())
-                .build()
-        );
     }
 
     public String flagEmoji(String lang) {

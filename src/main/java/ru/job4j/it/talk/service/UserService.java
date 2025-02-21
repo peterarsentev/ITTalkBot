@@ -2,18 +2,14 @@ package ru.job4j.it.talk.service;
 
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
-import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import ru.job4j.it.talk.config.UserConfigKey;
 import ru.job4j.it.talk.model.User;
 import ru.job4j.it.talk.model.UserConfig;
-import ru.job4j.it.talk.model.UserVocabulary;
 import ru.job4j.it.talk.repository.UserConfigRepository;
 import ru.job4j.it.talk.repository.UserRepository;
-import ru.job4j.it.talk.repository.UserVocabularyRepository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -21,7 +17,6 @@ import java.util.Optional;
 public class UserService {
     private final UserRepository userRepository;
     private final UserConfigRepository userConfigRepository;
-    private final UserVocabularyRepository userVocabularyRepository;
 
     public Optional<User> findByClientId(@NonNull Long clientId) {
         return userRepository.findByClientId(clientId);
@@ -50,9 +45,5 @@ public class UserService {
             create(member);
         }
         return findByClientId(client.getId()).get();
-    }
-
-    public List<UserVocabulary> findByUserOrderByTotalAsc(User user, Limit limit) {
-        return userVocabularyRepository.findByUserOrderByTotalAsc(user, limit);
     }
 }

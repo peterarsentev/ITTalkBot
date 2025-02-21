@@ -11,6 +11,7 @@ import ru.job4j.it.talk.repository.VoiceRepository;
 import ru.job4j.it.talk.service.*;
 import ru.job4j.it.talk.service.ui.TgButtons;
 import ru.job4j.it.talk.service.util.LevelLangPrompt;
+import ru.job4j.it.talk.service.util.MD5Corrector;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -25,6 +26,8 @@ public class CallbackHandle {
     private final SituationService situationService;
     private final TgButtons tgButtons;
     private final LevelLangPrompt levelLangPrompt;
+    private final QuestionService questionService;
+    private final MD5Corrector md5Corrector;
 
     public void process(Path userDir, Update update, Function<Content, Integer> receive) {
         var data = update.getCallbackQuery().getData();
@@ -35,89 +38,15 @@ public class CallbackHandle {
         var level = userService.findUserConfigByKey(user.getId(), UserConfigKey.TARGET_LANG)
                 .orElse(new UserConfig(-1L, user, UserConfigKey.LEVEL_LANG.key, "A1"))
                 .getValue();
-        if ("recommendation".startsWith(data)) {
-            var message = (Message) update.getCallbackQuery().getMessage();
-            var buttons = message.getReplyMarkup().getKeyboard().iterator().next();
-            var updatedBtns = buttons.stream()
-                    .filter(btn -> !btn.getCallbackData().equals("recommendation"))
-                    .toList();
-            receive.apply(
-                    Content.of().chatId(user.getChatId())
-                            .deleteKeyboardMarkUpMessageId(message.getMessageId())
-                            .build());
-            var voice = voiceRepository.findByMessageId(message.getMessageId()).get();
-            var req = new StringBuilder();
-            req.append("Укажи на грамматические ошибки в английском тексте.\n\n");
-            req.append(voice.getText());
-            var resp = gigaChatService.callWithoutSystem(req.toString(), -1L);
-            receive.apply(
-                    Content.of().chatId(user.getChatId())
-                            .buttons(List.of(updatedBtns))
-                            .text(String.format("*Рекомендации:*\n%s", resp))
-                            .build());
-        } else if ("hint".startsWith(data)) {
-            var message = (Message) update.getCallbackQuery().getMessage();
-            var buttons = message.getReplyMarkup().getKeyboard().iterator().next();
-            var updatedBtns = buttons.stream()
-                    .filter(btn -> !btn.getCallbackData().equals("hint"))
-                    .toList();
-            receive.apply(
-                    Content.of().chatId(user.getChatId())
-                            .deleteKeyboardMarkUpMessageId(message.getMessageId())
-                            .build());
-            var generateHintId = receive.apply(Content.of().chatId(user.getChatId())
-                    .text("\uD83D\uDCA1 _Создаю подсказку_ ...")
-                    .build());
-            var lines = message.getText().split("\n");
-            receive.apply(
-                    Content.of().chatId(user.getChatId())
-                            .buttons(List.of(updatedBtns))
-                            .updateMessageId(message.getMessageId())
-                            .text(String.format("*%s*:\n%s", lines[0], lines[1]))
-                            .build());
-            var resp = gigaChatService.callRole(
-                    levelLangPrompt.prompt(level),
-                    String.format("suggest how to answer on this question and provide useful vocabulary:\n\n%s", lines[1]),
-                    user.getChatId());
-            receive.apply(
-                    Content.of().chatId(user.getChatId())
-                            .deleteMessageId(generateHintId)
-                            .build());
-            receive.apply(
-                    Content.of().chatId(user.getChatId())
-                            .buttons(List.of(updatedBtns))
-                            .text(String.format("*Подсказка:*\n%s", resp))
-                            .build());
-        } else if ("translate".startsWith(data)) {
-            var message = (Message) update.getCallbackQuery().getMessage();
-            var buttons = message.getReplyMarkup().getKeyboard().iterator().next();
-            var updatedBtns = buttons.stream()
-                    .filter(btn -> !btn.getCallbackData().equals("translate"))
-                    .toList();
-            receive.apply(
-                    Content.of().chatId(user.getChatId())
-                            .deleteKeyboardMarkUpMessageId(message.getMessageId())
-                            .build());
-            var firstBreak = message.getText().indexOf("\n");
-            var firstLine = message.getText().substring(0, firstBreak);
-            var text = message.getText().substring(firstBreak + 1);
-            var resp = gigaChatService.callWithoutSystem(
-                    String.format("Переведи на русский язык\n\n%s", text), -1L);
-            receive.apply(
-                    Content.of().chatId(user.getChatId())
-                            .buttons(List.of(updatedBtns))
-                            .updateMessageId(message.getMessageId())
-                            .text(String.format("*%s*:\n%s\n\n*Перевод:*\n%s", firstLine, text, resp))
-                            .build());
-        } else if ("hide".startsWith(data)) {
+        if ("hide".startsWith(data)) {
             var message = (Message) update.getCallbackQuery().getMessage();
             receive.apply(
                     Content.of().chatId(user.getChatId())
                             .deleteMessageId(message.getMessageId())
                             .build());
-        } else if (data.startsWith("target_lang_")) {
-            var langChange = data.substring("target_lang_".length());
-            userService.saveConfig(user.getId(), UserConfigKey.TARGET_LANG, langChange);
+        } else if (data.startsWith("topic_")) {
+            var topicId = data.substring("topic_".length());
+            userService.saveConfig(user.getId(), UserConfigKey.TOPIC_ID, topicId);
             receive.apply(
                     Content.of()
                             .chatId(user.getChatId())
@@ -126,20 +55,23 @@ public class CallbackHandle {
             receive.apply(
                     Content.of()
                             .chatId(user.getChatId())
-                            .text(String.format("_Установлен язык:_ %s", lang))
+                            .text("*Выберите вопрос:*")
+                            .buttons(tgButtons.questionsByTopicId(Long.valueOf(topicId)))
                             .build());
-        } else if (data.startsWith("set_level_")) {
-            var setLevel = data.substring("set_level_".length());
-            userService.saveConfig(user.getId(), UserConfigKey.LEVEL_LANG, setLevel);
+        } else if (data.startsWith("question_")) {
+            var questionId = data.substring("question_".length());
+            userService.saveConfig(user.getId(), UserConfigKey.QUESTION_ID, questionId);
             receive.apply(
                     Content.of()
                             .chatId(user.getChatId())
                             .deleteMessageId(update.getCallbackQuery().getMessage().getMessageId())
                             .build());
+            var question = questionService.findById(Long.parseLong(questionId));
             receive.apply(
                     Content.of()
                             .chatId(user.getChatId())
-                            .text(String.format("_Уровень языка:_ %s", setLevel))
+                            .text(String.format("*Ответьте текcтом или голосом:*\n\n%s",
+                                    md5Corrector.html2mdv2(question.getDescription())))
                             .build());
         } else if (data.equalsIgnoreCase("target_lang")) {
             receive.apply(

@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-@Entity(name = "ts_voice")
+@Entity(name = "itb_voice")
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -22,16 +22,9 @@ public class Voice {
 
     private String text;
 
-    private String lang;
-
     private Integer duration;
 
     @Column(nullable = false, updatable = false)
     private java.time.LocalDateTime created = java.time.LocalDateTime.now();
-
-    private Integer messageId;
-
-    @Column(name = "translate_text")
-    private String translateText;
 }
 

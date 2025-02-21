@@ -188,16 +188,13 @@ public class GigaChatService {
         var key = "NGVkOWYyMjQtZmFlNy00YTc0LThlMDYtYWM5ZTExNDJlMGY0OjQ4OTdlM2E1LTg1MmQtNDUzNy1iNGIyLTNlZjFhZGNiZDEzYQ==";
         var req = new StringBuilder();
         // 'la' 'flu' 'choice' 'poundery'
-        req.append("Оцени мой ответ на вопрос в баллах от 0 до 100 ");
-        req.append("Тема: Чистая архитектура. Вопрос: Расскажите о принципе DRY? ");
-        req.append("Мой ответ: Этот принцип говорит о том, что не нужно тебя повторять.");
-        req.append("Формат твоего ответа: Балл: [0 до 100] ");
+        req.append("Оцени мой ответ на вопрос в баллах от 0 до 100. Тема: 1.2. ООП | Основы. Вопрос: Что такое наследование?. Мой ответ: Двои - это принцип создание новых классов за счет приспользования предыдущих.\n"
+               + ". Формат твоего ответа: Балл: [0 до 100] ");
         var resp = new GigaChatService(new GigaAuth(key))
                 .callWithoutSystem(
                         req.toString(), 1020L);
         System.out.println(resp);
     }
-
 
     private static void respInEnglish() {
         var key = "NGVkOWYyMjQtZmFlNy00YTc0LThlMDYtYWM5ZTExNDJlMGY0OjQ4OTdlM2E1LTg1MmQtNDUzNy1iNGIyLTNlZjFhZGNiZDEzYQ==";

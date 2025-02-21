@@ -8,5 +8,4 @@ import java.util.Optional;
 
 @Repository
 public interface VoiceRepository extends JpaRepository<Voice, Long> {
-    Optional<Voice> findByMessageId(Integer messageId);
 }

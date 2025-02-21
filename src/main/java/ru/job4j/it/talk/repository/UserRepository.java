@@ -17,7 +17,7 @@ public interface UserRepository extends CrudRepository<User, Long> {
 
     @Transactional
     @Modifying
-    @Query(value = "INSERT INTO ts_user (chat_id, client_id, name) "
+    @Query(value = "INSERT INTO itb_user (chat_id, client_id, name) "
             + "VALUES (:chatId, :clientId, :name) ON CONFLICT (client_id) DO NOTHING", nativeQuery = true)
     void create(@Param("chatId") Long chatId,
                 @Param("clientId") Long clientId,

@@ -22,8 +22,6 @@ public class TextHandle {
     private final GigaChatService gigaChatService;
     private final TextToSpeech textToSpeech;
     private final StatisticService statisticService;
-    private final RetellService retellService;
-    private final SmallTalkService smalltalkService;
     private final LevelLangPrompt levelLangPrompt;
 
     public void process(Path userDir, Message message,
@@ -32,13 +30,16 @@ public class TextHandle {
         var chatId = message.getChatId();
         var text = message.getText();
         if ("/start".equalsIgnoreCase(text) || "ℹ️ О проекте".equalsIgnoreCase(text)) {
-            String introMessage = "👋 *TalkSharp | Лингво-тренер* \n\n"
-                    + "🗣️ Тренируй разговорную речь на 10 языках: \uD83C\uDDFA\uD83C\uDDF8, \uD83C\uDDE9\uD83C\uDDEA, \uD83C\uDDF7\uD83C\uDDFA\n\n"
-                    + "1️⃣ Отправьте мне *голосовое сообщение*🎙️\n"
-                    + "2️⃣ Я проанализирую его и предоставлю *транскрипцию* 📝\n"
-                    + "3️⃣ Я проверю на наличие *грамматических ошибок* 🧐\n"
-                    + "4️⃣ Я сгенерирую *аудио-ответ* с голосом носителя языка 🎧\n\n"
-                    + "✅ Давайте начнем!";
+            String introMessage = "👋 ITTalkBot | IT-Тренер\n"
+                    + "\n"
+                    + "\uD83D\uDDE3\uFE0F Готовься к IT-собеседованиям с помощью голосовой практики!\n"
+                    + "\n"
+                    + "1\uFE0F⃣ Выбери тему и вопрос с IT-собеседования \uD83C\uDFA4  \n"
+                    + "2\uFE0F⃣ Запиши свой голосовой ответ  \n"
+                    + "3\uFE0F⃣ Я переведу аудио в текст и проанализирую твой ответ \uD83D\uDCDD  \n"
+                    + "4\uFE0F⃣ Предоставлю подробную обратную связь и рекомендации \uD83E\uDDD0  \n"
+                    + "\n"
+                    + "✅ Давай начнем готовиться к успеху!";
             receive.apply(
                     Content.of()
                             .chatId(chatId)
@@ -46,7 +47,6 @@ public class TextHandle {
                             .menu(tgButtons.menu())
                             .build()
             );
-            smalltalkService.process(userDir, chatId, message, receive);
         } else if ("/settings".equalsIgnoreCase(text) || "⚙️ Настройки".equalsIgnoreCase(text)) {
             receive.apply(
                     Content.of()
@@ -61,14 +61,20 @@ public class TextHandle {
                             .buttons(tgButtons.settings())
                             .build()
             );
-        } else if ("/small_talk".equalsIgnoreCase(text) || "💬 Поболтать".equalsIgnoreCase(text)) {
+        } else if ("/topics".equalsIgnoreCase(text) || "💬 Темы".equalsIgnoreCase(text)) {
             receive.apply(
                     Content.of()
                             .chatId(chatId)
                             .deleteMessageId(message.getMessageId())
                             .build()
             );
-            smalltalkService.process(userDir, chatId, message, receive);
+            receive.apply(
+                    Content.of()
+                            .chatId(chatId)
+                            .text("*Выберите тему:*")
+                            .buttons(tgButtons.topics())
+                            .build()
+            );
         } else if ("/situation".equalsIgnoreCase(text) || "📝 Ситуация".equalsIgnoreCase(text)) {
             receive.apply(
                     Content.of()
@@ -98,7 +104,6 @@ public class TextHandle {
                             .deleteMessageId(message.getMessageId())
                             .build()
             );
-            retellService.process(userDir, user, receive);
         } else {
             textProcess(userDir, chatId, message, receive);
         }

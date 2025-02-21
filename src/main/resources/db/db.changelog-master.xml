@@ -5,28 +5,19 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-    <include file="changeset/001_ddl_create_users.sql"
+    <include file="changeset/001_ddl_create_itb_users.sql"
              author="Petr Arsentev"
              relativeToChangelogFile="true"/>
 
-    <include file="changeset/002_ddl_create_ts_user_config.sql"
+    <include file="changeset/002_ddl_create_itb_user_config.sql"
              author="Petr Arsentev"
              relativeToChangelogFile="true"/>
 
-    <include file="changeset/003_ddl_create_ts_voice.sql"
+    <include file="changeset/003_ddl_create_itb_voice.sql"
              author="Petr Arsentev"
              relativeToChangelogFile="true"/>
 
-
-    <include file="changeset/004_ddl_alter_ts_voice.sql"
-             author="Petr Arsentev"
-             relativeToChangelogFile="true"/>
-
-    <include file="changeset/005_ddl_create_ts_small_talk.sql"
-             author="Petr Arsentev"
-             relativeToChangelogFile="true"/>
-
-    <include file="changeset/006_ddl_create_ts_daily_aim.sql"
+    <include file="changeset/004_ddl_create_itb_daily_aim.sql"
              author="Petr Arsentev"
              relativeToChangelogFile="true"/>
 </databaseChangeLog>

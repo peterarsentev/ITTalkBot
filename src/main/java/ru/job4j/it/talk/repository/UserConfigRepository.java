@@ -18,7 +18,7 @@ public interface UserConfigRepository extends CrudRepository<UserConfig, Long> {
 
     @Modifying
     @Transactional
-    @Query(value = "INSERT INTO ts_user_config (user_id, key, value) "
+    @Query(value = "INSERT INTO itb_user_config (user_id, key, value) "
             + "VALUES (:userId, :key, :value) "
             + "ON CONFLICT (user_id, key) "
             + "DO UPDATE SET value = EXCLUDED.value", nativeQuery = true)

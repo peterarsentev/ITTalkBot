@@ -1,15 +1,45 @@
 package ru.job4j.it.talk.service.ui;
 
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
+import ru.job4j.it.talk.dto.Question;
+import ru.job4j.it.talk.dto.Topic;
+import ru.job4j.it.talk.service.QuestionService;
+import ru.job4j.it.talk.service.TopicService;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@AllArgsConstructor
 public class TgButtons {
+    private final TopicService topicService;
+    private final QuestionService questionService;
+
+    public List<List<InlineKeyboardButton>> topics() {
+        List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
+        for (var topic : topicService.findAll()) {
+            keyboard.add(List.of(createBtn(topic.getName(), "topic_" + topic.getId())));
+        }
+        keyboard.addAll(hide());
+        return keyboard;
+    }
+
+    public List<List<InlineKeyboardButton>> questionsByTopicId(Long topicId) {
+        List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
+        List<Question> questions = questionService.findByTopicId(topicId);
+        if (questions.size() > 20) {
+            questions = questions.subList(0, 20);
+        }
+        for (var question : questions) {
+            keyboard.add(List.of(createBtn(question.getTitle(), "question_" + question.getId())));
+        }
+        keyboard.addAll(hide());
+        return keyboard;
+    }
 
     public List<List<InlineKeyboardButton>> levels() {
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
@@ -25,15 +55,15 @@ public class TgButtons {
     public List<KeyboardRow> menu() {
         List<KeyboardRow> keyboard = new ArrayList<>();
         KeyboardRow row1 = new KeyboardRow();
-        row1.add(new KeyboardButton("💬 Поболтать"));
-        row1.add(new KeyboardButton("📝 Ситуация"));
-        row1.add(new KeyboardButton("🔄 Пересказ"));
+        row1.add(new KeyboardButton("💬 Темы"));
+        row1.add(new KeyboardButton("ℹ️ О проекте"));
+        row1.add(new KeyboardButton("⚙️ Настройки"));
         keyboard.add(row1);
-        KeyboardRow row2 = new KeyboardRow();
-        row2.add(new KeyboardButton("ℹ️ О проекте"));
-        row2.add(new KeyboardButton("🏆 Рейтинг"));
-        row2.add(new KeyboardButton("⚙️ Настройки"));
-        keyboard.add(row2);
+//        KeyboardRow row2 = new KeyboardRow();
+//        row2.add(new KeyboardButton("ℹ️ О проекте"));
+//        row2.add(new KeyboardButton("🏆 Рейтинг"));
+//        row2.add(new KeyboardButton("⚙️ Настройки"));
+//        keyboard.add(row2);
         return keyboard;
     }
 
