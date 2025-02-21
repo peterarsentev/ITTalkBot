@@ -70,8 +70,8 @@ public class CallbackHandle {
             receive.apply(
                     Content.of()
                             .chatId(user.getChatId())
-                            .text(String.format("*Ответьте текcтом или голосом:*\n\n%s",
-                                    md5Corrector.html2mdv2(question.getDescription())))
+                            .text(String.format("*Ответьте текстом или голосом:*\n\n%s",
+                                    md5Corrector.extractTextFromHtml(question.getDescription())))
                             .build());
         } else if (data.equalsIgnoreCase("target_lang")) {
             receive.apply(
