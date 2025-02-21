@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if test -f "talksharp.pid"; then
-    kill -9 $(cat talksharp.pid)
+if test -f "ittalkbot.pid"; then
+    kill -9 $(cat ittalkbot.pid)
 fi
 
 export JAVA_HOME=/root/jdk-21.0.3
