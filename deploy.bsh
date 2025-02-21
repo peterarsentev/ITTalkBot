@@ -1,0 +1,16 @@
+#!/bin/bash
+
+if test -f "talksharp.pid"; then
+    kill -9 $(cat talksharp.pid)
+fi
+
+export JAVA_HOME=/root/jdk-21.0.3
+export M2_HOME=/root/apache-maven-3.8.6
+export PATH=$JAVA_HOME/bin:$M2_HOME/bin:$PATH
+
+git fetch
+git rebase
+
+mvn clean package -DskipTests=true
+
+nohup java "-Dspring.config.location=file:./talksharp.properties" -jar target/talksharp-1.0.0.jar &
