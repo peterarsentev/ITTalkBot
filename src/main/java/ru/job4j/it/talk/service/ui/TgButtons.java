@@ -6,9 +6,8 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import ru.job4j.it.talk.dto.Question;
-import ru.job4j.it.talk.dto.Topic;
-import ru.job4j.it.talk.service.QuestionService;
-import ru.job4j.it.talk.service.TopicService;
+import ru.job4j.it.talk.service.job4j.QuestionService;
+import ru.job4j.it.talk.service.job4j.TopicService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,14 +29,14 @@ public class TgButtons {
 
     public List<List<InlineKeyboardButton>> questionsByTopicId(Long topicId) {
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
-        List<Question> questions = questionService.findByTopicId(topicId);
+        var questions = questionService.findByTopicId(topicId);
         if (questions.size() > 20) {
             questions = questions.subList(0, 20);
         }
         for (var question : questions) {
-            keyboard.add(List.of(createBtn(question.getTitle(), "question_" + question.getId())));
+            keyboard.add(List.of(createBtn(question.getQuestionTitle(), "question_" + question.getQuestionId())));
         }
-        keyboard.addAll(hide());
+        keyboard.addAll(navigate());
         return keyboard;
     }
 
@@ -59,11 +58,6 @@ public class TgButtons {
         row1.add(new KeyboardButton("ℹ️ О проекте"));
         row1.add(new KeyboardButton("⚙️ Настройки"));
         keyboard.add(row1);
-//        KeyboardRow row2 = new KeyboardRow();
-//        row2.add(new KeyboardButton("ℹ️ О проекте"));
-//        row2.add(new KeyboardButton("🏆 Рейтинг"));
-//        row2.add(new KeyboardButton("⚙️ Настройки"));
-//        keyboard.add(row2);
         return keyboard;
     }
 
@@ -76,25 +70,17 @@ public class TgButtons {
         return keyboard;
     }
 
-    public List<List<InlineKeyboardButton>> languages() {
-        List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
-        keyboard.add(List.of(createBtn("🇺🇸 English", "target_lang_en")));
-//        keyboard.add(List.of(createBtn("🇪🇸 Español", "target_lang_es")));
-//        keyboard.add(List.of(createBtn("🇫🇷 Français", "target_lang_fr")));
-//        keyboard.add(List.of(createBtn("🇩🇪 Deutsch", "target_lang_de")));
-//        keyboard.add(List.of(createBtn("🇮🇹 Italiano", "target_lang_it")));
-//        keyboard.add(List.of(createBtn("🇵🇹 Português", "target_lang_pt")));
-//        keyboard.add(List.of(createBtn("🇳🇱 Nederlands", "target_lang_nl")));
-//        keyboard.add(List.of(createBtn("🇷🇺 Русский", "target_lang_ru")));
-//        keyboard.add(List.of(createBtn("🇯🇵 日本語", "target_lang_ja")));
-//        keyboard.add(List.of(createBtn("🇨🇳 中文", "target_lang_zh")));
-        keyboard.addAll(hide());
-        return keyboard;
-    }
-
     public List<List<InlineKeyboardButton>> translate() {
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
         keyboard.add(List.of(createBtn("\uD83D\uDCDD Перевести", "translate")));
+        return keyboard;
+    }
+
+    public List<List<InlineKeyboardButton>> learn(Long topicId, Long questionId) {
+        List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
+        keyboard.add(List.of(
+                createBtn("\uD83D\uDCCC К вопросам", "topic_" + topicId),
+                createBtn("🎓 Изучить", "learn_question_" + questionId)));
         return keyboard;
     }
 
@@ -108,6 +94,16 @@ public class TgButtons {
     public List<List<InlineKeyboardButton>> hide() {
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
         keyboard.add(List.of(createBtn("\uD83D\uDCDD Скрыть", "hide")));
+        return keyboard;
+    }
+
+    public List<List<InlineKeyboardButton>> navigate() {
+        List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
+        keyboard.add(List.of(
+                createBtn("\uD83D\uDCCC К темам", "topics"), // Иконка для "К темам"
+                createBtn("\u2B05️ Назад", "back"),           // Иконка для "Назад"
+                createBtn("\u27A1️ Вперед", "forward")        // Иконка для "Вперед"
+        ));
         return keyboard;
     }
 

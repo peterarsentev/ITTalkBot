@@ -8,4 +8,5 @@ public class Question {
     private String title;
     private String description;
     private Long topicId;
+    private String explanation;
 }

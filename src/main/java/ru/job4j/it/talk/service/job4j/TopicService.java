@@ -1,21 +1,15 @@
-package ru.job4j.it.talk.service;
+package ru.job4j.it.talk.service.job4j;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
-import ru.job4j.it.talk.config.SslDisabling;
-import ru.job4j.it.talk.dto.Question;
 import ru.job4j.it.talk.dto.Topic;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 

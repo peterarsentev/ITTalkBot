@@ -6,14 +6,13 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import ru.job4j.it.talk.config.UserConfigKey;
 import ru.job4j.it.talk.content.Content;
-import ru.job4j.it.talk.model.UserConfig;
 import ru.job4j.it.talk.service.*;
+import ru.job4j.it.talk.service.job4j.QuestionService;
+import ru.job4j.it.talk.service.job4j.TopicService;
 import ru.job4j.it.talk.service.ui.TgButtons;
-import ru.job4j.it.talk.service.util.LevelLangPrompt;
-import ru.job4j.it.talk.service.util.MD5Corrector;
+import ru.job4j.it.talk.service.util.MarkDown;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.function.Function;
 
 @Service
@@ -28,7 +27,7 @@ public class VoiceHandle {
     private final TextToSpeech textToSpeech;
     private final TopicService topicService;
     private final QuestionService questionService;
-    private final MD5Corrector md5Corrector;
+    private final MarkDown md5Corrector;
 
     public void process(Long chatId,
                         Message message,
@@ -66,7 +65,7 @@ public class VoiceHandle {
         var topic = topicService.findById(question.getTopicId());
         var req = new StringBuilder();
         req.append("Оцени мой ответ на вопрос в баллах от 0 до 100. ");
-        req.append("Тема: ")
+        req.append("Тема: Java. ")
                 .append(md5Corrector.extractTextFromHtml(topic.getName()))
                 .append(". Вопрос: ").append(md5Corrector.extractTextFromHtml(question.getDescription())).append(". ");
         req.append("Мой ответ: ").append(originText).append(". ");

@@ -18,15 +18,17 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.job4j.it.talk.content.Content;
-import ru.job4j.it.talk.service.handle.CallbackHandle;
+import ru.job4j.it.talk.service.handle.CallBackHandle;
 import ru.job4j.it.talk.service.handle.TextHandle;
 import ru.job4j.it.talk.service.handle.VoiceHandle;
-import ru.job4j.it.talk.service.util.MD5Corrector;
+import ru.job4j.it.talk.service.util.MarkDown;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
@@ -37,21 +39,21 @@ public class ReceiveUpdateService extends TelegramLongPollingBot
     private final String voiceDir;
     private final VoiceHandle voiceHandle;
     private final TextHandle textHandle;
-    private final CallbackHandle callbackHandle;
-    private final MD5Corrector md5Corrector;
+    private final List<CallBackHandle> callbackHandles;
+    private final MarkDown markDown;
 
     public ReceiveUpdateService(@Value("${telegram.bot.name}") String botName,
                                 @Value("${telegram.bot.token}") String botToken,
                                 @Value("${voice.dir}") String voiceDir,
                                 VoiceHandle voiceHandle, TextHandle textHandle,
-                                CallbackHandle callbackHandle, MD5Corrector md5Corrector) {
+                                List<CallBackHandle> callbackHandles, MarkDown markDown) {
         super(botToken);
         this.botName = botName;
         this.voiceDir = voiceDir;
         this.voiceHandle = voiceHandle;
         this.textHandle = textHandle;
-        this.callbackHandle = callbackHandle;
-        this.md5Corrector = md5Corrector;
+        this.callbackHandles = callbackHandles;
+        this.markDown = markDown;
     }
 
     @Override
@@ -62,9 +64,12 @@ public class ReceiveUpdateService extends TelegramLongPollingBot
     @Override
     public void onUpdateReceived(Update update) {
         if (update.hasCallbackQuery()) {
-            callbackHandle.process(
-                    Path.of(voiceDir, update.getCallbackQuery().getMessage().getChatId().toString()),
-                    update, this::sent);
+            for (var handle : callbackHandles) {
+                if (handle.check(update.getCallbackQuery().getData())) {
+                    handle.process(update, this);
+                    break;
+                }
+            }
             return;
         }
         if (!update.hasMessage()) {
@@ -106,6 +111,10 @@ public class ReceiveUpdateService extends TelegramLongPollingBot
         throw new IllegalStateException("Could not download voice");
     }
 
+    public CompletableFuture<Integer> sentAsync(Content content) {
+        return CompletableFuture.supplyAsync(() -> sent(content));
+    }
+
     public Integer sent(Content content) {
         try {
             if (content.getDeleteMessageId() != null) {
@@ -131,7 +140,7 @@ public class ReceiveUpdateService extends TelegramLongPollingBot
             } else if (content.getMenu() != null) {
                 SendMessage message = new SendMessage();
                 message.setChatId(content.getChatId());
-                message.setText(md5Corrector.correctPairSymbols((content.getText())));
+                message.setText(markDown.correctPairSymbols((content.getText())));
                 message.setParseMode("MarkdownV2");
                 var markup = new ReplyKeyboardMarkup();
                 markup.setKeyboard(content.getMenu());
@@ -151,7 +160,7 @@ public class ReceiveUpdateService extends TelegramLongPollingBot
                 if (content.getButtons() != null) {
                     updateMessage.setReplyMarkup(new InlineKeyboardMarkup(content.getButtons()));
                 }
-                updateMessage.setText(md5Corrector.correctPairSymbols(content.getText()));
+                updateMessage.setText(markDown.correctPairSymbols(content.getText()));
                 updateMessage.setParseMode("MarkdownV2");
                 updateMessage.setMessageId(content.getUpdateMessageId());
                 execute(updateMessage);
@@ -165,7 +174,7 @@ public class ReceiveUpdateService extends TelegramLongPollingBot
             }
             var message = new SendMessage();
             message.setChatId(content.getChatId());
-            message.setText(md5Corrector.correctPairSymbols((content.getText())));
+            message.setText(markDown.correctPairSymbols((content.getText())));
             message.setParseMode("MarkdownV2");
             if (content.getButtons() != null) {
                 var inlineKeyboardMarkup = new InlineKeyboardMarkup();

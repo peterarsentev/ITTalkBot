@@ -23,17 +23,17 @@ public class SituationService {
     private final UserService userService;
     private final TgButtons tgButtons;
 
-    public void process(Path userDir, Update update, Function<Content, Integer> receive) {
+    public void process(Path userDir, Update update, ContentSender receive) {
         var message = (Message) update.getCallbackQuery().getMessage();
         var data = update.getCallbackQuery().getData();
         var user = userService.findByClientId(update.getCallbackQuery().getFrom().getId()).get();
         var lang = userService.findUserConfigByKey(user.getId(), UserConfigKey.TARGET_LANG)
                 .orElse(new UserConfig(-1L, user, UserConfigKey.TARGET_LANG.key, "en"))
                 .getValue();
-        receive.apply(
+        receive.sent(
                 Content.of().chatId(user.getChatId())
                         .deleteMessageId(message.getMessageId()).build());
-        var analyzeMessageId = receive.apply(
+        var analyzeMessageId = receive.sent(
                 Content.of().chatId(message.getChatId())
                         .text("🔄 * Создаю ситуацию ...*").build());
         var botText = gigaChatService.callRole(
@@ -42,10 +42,10 @@ public class SituationService {
         );
         var botTextLang = gigaChatService.callWithoutSystem(
                 String.format("Переведи на английский\n\n%s", botText), -1L);
-        receive.apply(
+        receive.sent(
                 Content.of().chatId(user.getChatId())
                         .deleteMessageId(analyzeMessageId).build());
-        var botMessageId = receive.apply(
+        var botMessageId = receive.sent(
                 Content.of()
                         .chatId(message.getChatId())
                         .text(String.format("🗣️ *Бот [%s]*:\n%s", lang, botTextLang))
@@ -53,7 +53,7 @@ public class SituationService {
                         .build()
         );
         var mp3Bot = textToSpeech.process(userDir, botMessageId, botTextLang, lang);
-        receive.apply(
+        receive.sent(
                 Content.of()
                         .chatId(message.getChatId())
                         .voice(mp3Bot)

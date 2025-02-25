@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class MD5Corrector {
+public class MarkDown {
     public String escapeMarkdownV2(String input) {
         return input
                 .replace("|", "\\|")
@@ -122,7 +122,7 @@ public class MD5Corrector {
 
     public static void main(String[] args) {
         var text = "<p>что напечатает код?<\\/p>\\n<pre><code class=\\\"language-java\\\">public static void main(String[] args) {\\n    process(3);\\n}\\n\\nprivate static void process(int value) {\\n    double half = value / 2;\\n    System.out.println(half);\\n}\\n<\\/code><\\/pre>\\n\",\"id\":2,\"position\":2,\"title\":\"Округление целочисленного деления при преобразовании в double\",\"explanation\":\"<p>Причина, по которой код напечатает <strong>1.0<\\/strong>, связана с особенностями деления целых чисел в Java.<\\/p>\\n<p>В строке:<\\/p>\\n<pre><code class=\\\"language-java\\\">double half = value / 2;\\n<\\/code><\\/pre>\\n<p>значение <tt>value<\\/tt> имеет тип <tt>int<\\/tt>, а число <tt>2<\\/tt> также является целым числом. В Java, когда два целых числа делятся друг на друга, результатом будет <strong>целочисленное деление<\\/strong>, то есть дробная часть отбрасывается.<\\/p>\\n<p>В данном случае, когда <tt>value<\\/tt> равно 3, операция <tt>3 / 2<\\/tt> выполняется как целочисленное деление, давая результат <strong>1<\\/strong>, а не 1.5. После этого результат <strong>1<\\/strong> преобразуется в тип <tt>double<\\/tt>, поэтому переменной <tt>half<\\/tt> присваивается значение <strong>";
-        var resp = new MD5Corrector().html2mdv2(text);
+        var resp = new MarkDown().html2mdv2(text);
         System.out.println(resp); // Должен вывести *Тест*, так как символы имеют пару
     }
 }

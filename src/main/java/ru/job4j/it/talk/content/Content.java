@@ -21,4 +21,12 @@ public class Content {
     private List<KeyboardRow> menu;
     private Integer pinMessageId;
     private Integer unpinMessageId;
+    private Integer replyMessageId;
+
+    public static class ContentBuilder {
+        public ContentBuilder textFmt(String format, Object... args) {
+            this.text = String.format(format, args);
+            return this;
+        }
+    }
 }
