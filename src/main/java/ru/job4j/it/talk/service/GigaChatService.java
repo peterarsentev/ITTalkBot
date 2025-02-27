@@ -6,8 +6,10 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import ru.job4j.it.talk.config.SslDisabling;
+import ru.job4j.it.talk.service.ui.Prompt;
 import ru.job4j.it.talk.service.util.GigaAuth;
 import ru.job4j.it.talk.service.util.LevelLangPrompt;
+import ru.job4j.it.talk.service.util.MarkDown;
 
 import java.io.OutputStream;
 import java.io.InputStreamReader;
@@ -181,15 +183,14 @@ public class GigaChatService {
 
     private static void compare() {
         var key = "NGVkOWYyMjQtZmFlNy00YTc0LThlMDYtYWM5ZTExNDJlMGY0OjQ4OTdlM2E1LTg1MmQtNDUzNy1iNGIyLTNlZjFhZGNiZDEzYQ==";
-        var req = """
-                Мой ответ на вопрос 'Что такое Hibernate?' звучит так:
-                'Hibernate — это ORM-фреймворк для Java, который позволяет работать с базами данных, используя
-                объектно-ориентированный подход.'
-                Пожалуйста, проверьте правильность моего ответа и дайте рекомендации, если я ошибся.
-                """;
+        var req = new Prompt(new MarkDown()).checkAnswer(
+                "Базовый синтаксис",
+                "Можете рассказать, что такое примитивные типы данных в Java? Какие существуют примитивные типы, каковы их характеристики (размер и диапазон значений), и в чем отличие примитивных типов от объектов?",
+                "По-моему, в меню примитивную типу джава это таки маленькие числа, которые в джаву используются, например, для указания возраста."
+        );
         var resp = new GigaChatService(new GigaAuth(key))
                 .callWithoutSystem(
-                        req.toString(), 1021L);
+                        req, 1021L);
         System.out.println(resp);
     }
 }

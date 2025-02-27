@@ -9,6 +9,7 @@ import ru.job4j.it.talk.content.Content;
 import ru.job4j.it.talk.service.*;
 import ru.job4j.it.talk.service.job4j.QuestionService;
 import ru.job4j.it.talk.service.job4j.TopicService;
+import ru.job4j.it.talk.service.ui.Prompt;
 import ru.job4j.it.talk.service.ui.TgButtons;
 import ru.job4j.it.talk.service.util.MarkDown;
 
@@ -63,13 +64,9 @@ public class VoiceHandle {
         }
         var question = questionService.findById(Long.parseLong(questionId.get().getValue()));
         var topic = topicService.findById(question.getTopicId());
-        String req = """
-                Я готовьлюсь к собеседованию на позицию Java программист.
-                Проверьте правильность моего ответа и дайте рекомендации
-                Мой ответ на вопрос '%s' звучит так:
-                '%s'
-                """.formatted(
-                md5Corrector.extractTextFromHtml(topic.getName()),
+        var req = new Prompt(new MarkDown()).checkAnswer(
+                topic.getName(),
+                question.getDescription(),
                 originText
         );
         var botText = gigaChatService.callWithoutSystem(req, chatId);
