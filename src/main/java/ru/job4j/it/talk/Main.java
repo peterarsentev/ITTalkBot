@@ -25,7 +25,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         SslDisabling.disableCertificateValidation();
         SpringApplication application = new SpringApplication(Main.class);
-        application.addListeners(new ApplicationPidFileWriter("./ittaskbot.pid"));
+        application.addListeners(new ApplicationPidFileWriter("./ittalkbot.pid"));
         application.run();
     }
 
