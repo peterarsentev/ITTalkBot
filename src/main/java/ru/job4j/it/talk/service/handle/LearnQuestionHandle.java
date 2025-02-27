@@ -33,7 +33,7 @@ public class LearnQuestionHandle implements CallBackHandle {
                         .chatId(user.getChatId())
                         .text("*Объяснение*")
                         .build());
-        var text = markDown.extractTextFromHtml(question.getExplanation());
+        var text = markDown.html2md(question.getExplanation());
         int maxMessageLength = 4096;
         while (text.length() > maxMessageLength) {
             String part = text.substring(0, maxMessageLength);

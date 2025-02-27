@@ -18,7 +18,7 @@ public class Prompt {
                 Мой ответ: '%s'
                 """.formatted(
                 markDown.escapeMarkdownV2(topic),
-                markDown.extractTextFromHtml(question),
+                markDown.html2md(question),
                 markDown.escapeMarkdownV2(answer)
         );
     }

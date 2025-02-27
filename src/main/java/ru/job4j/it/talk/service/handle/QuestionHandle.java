@@ -38,8 +38,8 @@ public class QuestionHandle implements CallBackHandle {
         receive.sent(
                 Content.of()
                         .chatId(user.getChatId())
-                        .text(String.format("*Вопрос*\n\n%s",
-                                markDown.extractTextFromHtml(question.getDescription())))
+                        .textFmt("*Вопрос*\n\n%s",
+                                markDown.html2md(question.getDescription()))
                         .buttons(tgButtons.learn(question.getTopicId(), question.getId()))
                         .build());
         receive.sent(
