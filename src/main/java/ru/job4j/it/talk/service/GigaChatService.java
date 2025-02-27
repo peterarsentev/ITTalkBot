@@ -2,6 +2,7 @@ package ru.job4j.it.talk.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import ru.job4j.it.talk.config.SslDisabling;
@@ -159,93 +160,36 @@ public class GigaChatService {
         return null;
     }
 
-    public String callWithoutSystem(String message, Long chatId) {
-        String req = """
-                            {
-                              "model": "GigaChat",
-                              "messages": [
-                                {
-                                  "role": "user",
-                                  "content": "%s"
-                                }
-                              ],
-                              "stream": false,
-                              "update_interval": 0
-                            }""".formatted(escapeInvalidJsonChars(message));
-        return call(req, chatId);
+    public String callWithoutSystem(String text, Long chatId) {
+        var messages = new JSONArray();
+        var message = new JSONObject();
+        message.put("role", "user");
+        message.put("content", text);
+        messages.put(message);
+        var req = new JSONObject();
+        req.put("model", "GigaChat");
+        req.put("stream", false);
+        req.put("update_interval", 0);
+        req.put("messages", messages);
+        return call(req.toString(), chatId);
     }
 
     public static void main(String[] args) throws Exception {
         SslDisabling.disableCertificateValidation();
         compare();
-        /**
-         * Once upon a time, there was a king who lived in a castle. He had a special room where he kept his treasures. One day, the king decided to organize his coins by size and color. He lined them up in different rows according to their order. This made the king very happy, as it helped him keep track of his wealth.
-         * В чем отличие методы save от merge?
-         */
     }
 
     private static void compare() {
         var key = "NGVkOWYyMjQtZmFlNy00YTc0LThlMDYtYWM5ZTExNDJlMGY0OjQ4OTdlM2E1LTg1MmQtNDUzNy1iNGIyLTNlZjFhZGNiZDEzYQ==";
-        var req = new StringBuilder();
-        // 'la' 'flu' 'choice' 'poundery'
-        req.append("Оцени мой ответ на вопрос в баллах от 0 до 100. Тема: 1.2. ООП | Основы. Вопрос: Что такое наследование?. Мой ответ: Двои - это принцип создание новых классов за счет приспользования предыдущих.\n"
-               + ". Формат твоего ответа: Балл: [0 до 100] ");
+        var req = """
+                Мой ответ на вопрос 'Что такое Hibernate?' звучит так:
+                'Hibernate — это ORM-фреймворк для Java, который позволяет работать с базами данных, используя
+                объектно-ориентированный подход.'
+                Пожалуйста, проверьте правильность моего ответа и дайте рекомендации, если я ошибся.
+                """;
         var resp = new GigaChatService(new GigaAuth(key))
                 .callWithoutSystem(
-                        req.toString(), 1020L);
-        System.out.println(resp);
-    }
-
-    private static void respInEnglish() {
-        var key = "NGVkOWYyMjQtZmFlNy00YTc0LThlMDYtYWM5ZTExNDJlMGY0OjQ4OTdlM2E1LTg1MmQtNDUzNy1iNGIyLTNlZjFhZGNiZDEzYQ==";
-        var req = new StringBuilder();
-        // 'la' 'flu' 'choice' 'poundery'
-        req.append("Create a short story in English using the words 'la', 'flu', 'choice', and 'poundery'");
-        var system = new LevelLangPrompt().prompt("A1");
-        var resp = new GigaChatService(new GigaAuth(key))
-                .callRole(
-                        system,
-                        req.toString(), -1L);
-        System.out.println(resp);
-    }
-
-    private static void respToEn() {
-        var key = "NGVkOWYyMjQtZmFlNy00YTc0LThlMDYtYWM5ZTExNDJlMGY0OjQ4OTdlM2E1LTg1MmQtNDUzNy1iNGIyLTNlZjFhZGNiZDEzYQ==";
-        var req = new StringBuilder();
-        req.append("Переведи на русский.\n\n");
-        req.append("What's your favorite dish?");
-        var resp = new GigaChatService(new GigaAuth(key))
-                .callWithoutSystem(
-                        req.toString(), -1L);
-        System.out.println(resp);
-    }
-
-    private static void enToRu() {
-        var key = "NGVkOWYyMjQtZmFlNy00YTc0LThlMDYtYWM5ZTExNDJlMGY0OjQ4OTdlM2E1LTg1MmQtNDUzNy1iNGIyLTNlZjFhZGNiZDEzYQ==";
-        var req = new StringBuilder();
-        req.append("Переведи на русский.\n\n");
-        var resp = new GigaChatService(new GigaAuth(key))
-                .callWithoutSystem(
-                        req.toString(), -1L);
-        System.out.println(resp);
-    }
-
-    private static void askByEn() {
-        var key = "NGVkOWYyMjQtZmFlNy00YTc0LThlMDYtYWM5ZTExNDJlMGY0OjQ4OTdlM2E1LTg1MmQtNDUzNy1iNGIyLTNlZjFhZGNiZDEzYQ==";
-        var req = new StringBuilder();
-        var resp = new GigaChatService(new GigaAuth(key))
-                .callWithoutSystem(
-                        req.toString(), -1L);
-        System.out.println(resp);
-    }
-
-    private static void respToRu() {
-        var key = "NGVkOWYyMjQtZmFlNy00YTc0LThlMDYtYWM5ZTExNDJlMGY0OjQ4OTdlM2E1LTg1MmQtNDUzNy1iNGIyLTNlZjFhZGNiZDEzYQ==";
-        var req = new StringBuilder();
-        req.append("Переведи на русский.\n\n");
-        var resp = new GigaChatService(new GigaAuth(key))
-                .callWithoutSystem(
-                        req.toString(), -1L);
+                        req.toString(), 1021L);
         System.out.println(resp);
     }
 }

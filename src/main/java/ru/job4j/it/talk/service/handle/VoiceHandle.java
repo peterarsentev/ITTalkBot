@@ -63,15 +63,16 @@ public class VoiceHandle {
         }
         var question = questionService.findById(Long.parseLong(questionId.get().getValue()));
         var topic = topicService.findById(question.getTopicId());
-        var req = new StringBuilder();
-        req.append("Оцени мой ответ на вопрос в баллах от 0 до 100. ");
-        req.append("Тема: Java. ")
-                .append(md5Corrector.extractTextFromHtml(topic.getName()))
-                .append(". Вопрос: ").append(md5Corrector.extractTextFromHtml(question.getDescription())).append(". ");
-        req.append("Мой ответ: ").append(originText).append(". ");
-        req.append("Формат твоего ответа: Балл: [0 до 100] ");
-        System.out.println(req);
-        var botText = gigaChatService.callWithoutSystem(originText, chatId);
+        String req = """
+                Я готовьлюсь к собеседованию на позицию Java программист.
+                Проверьте правильность моего ответа и дайте рекомендации
+                Мой ответ на вопрос '%s' звучит так:
+                '%s'
+                """.formatted(
+                md5Corrector.extractTextFromHtml(topic.getName()),
+                originText
+        );
+        var botText = gigaChatService.callWithoutSystem(req, chatId);
         receive.apply(
                 Content.of()
                         .chatId(chatId)
