@@ -30,16 +30,18 @@ public class MarkDown {
                 .replace("!", "\\!");
     }
 
-    public String correctPairSymbols(String input) {
-        input = escapeMarkdownV2(input);
+    public String correctPairSymbols(String markdown) {
+        markdown = escapeMarkdownV2(
+                convertHeadersToTelegramFormat(markdown)
+        );
         List<Character> specialSymbols = new ArrayList<>();
         var result = new StringBuilder();
-        for (char c : input.toCharArray()) {
+        for (char c : markdown.toCharArray()) {
             if (c == '*' || c == '_') {
                 specialSymbols.add(c);
             }
         }
-        for (char c : input.toCharArray()) {
+        for (char c : markdown.toCharArray()) {
             boolean addChar = true;
             if (specialSymbols.contains(c)) {
                 long count = specialSymbols.stream().filter(ch -> ch == c).count();
@@ -58,31 +60,22 @@ public class MarkDown {
         return result.toString();
     }
 
-    /**
-     * Экранирует спецсимволы MarkdownV2 согласно документации Telegram.
-     * Символы: _ * [ ] ( ) ~ ` > # + - = | { } . !
-     */
-    private String escapeMarkdown(String text) {
-        if (text == null) {
-            return null;
-        }
-        // Перечисляем спецсимволы, которые необходимо экранировать.
-        String[] specialChars = {"_", "*", "[", "]", "(", ")", "~", "`", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!"};
-        for (String ch : specialChars) {
-            // Заменяем каждый спецсимвол на экранированную версию (обратный слеш + символ)
-            text = text.replace(ch, "\\" + ch);
-        }
-        return text;
-    }
-
     public String html2md(String html) {
         return FlexmarkHtmlConverter.builder(new MutableDataSet()).build().convert(html);
     }
 
-    public static void main(String[] args) {
-        String html = "<h1>Hello, World!</h1><p>This is a paragraph.</p>";
-        var options = new MutableDataSet();
-        String markdown = FlexmarkHtmlConverter.builder(options).build().convert(html);
-        System.out.println(markdown);
+    public String convertHeadersToTelegramFormat(String markdown) {
+        String[] lines = markdown.split("\n");
+        StringBuilder converted = new StringBuilder();
+        for (String line : lines) {
+            if (line.trim().matches("^#{1,6}\\s+.*")) {
+                String headerText = line.trim().replaceFirst("^#{1,6}\\s+", "");
+                converted.append("*").append(headerText).append("*");
+            } else {
+                converted.append(line);
+            }
+            converted.append("\n");
+        }
+        return converted.toString();
     }
 }
