@@ -14,7 +14,8 @@ public class Prompt {
                 Я готовлюсь к собеседованию на позицию Java программист.
                 Проверьте правильность моего ответа и дайте рекомендации.
                 Тема вопроса: '%s'.
-                Мой ответ на вопрос '%s' звучит так: '%s'
+                Вопрос: '%s',
+                Мой ответ: '%s'
                 """.formatted(
                 markDown.escapeMarkdownV2(topic),
                 markDown.extractTextFromHtml(question),

@@ -23,8 +23,8 @@ public class SpeechToText {
     public String convert(Path path, String lang) {
         try {
             var textFile = Paths.get(path.getParent().toString(), path.getFileName().toString().replace(".ogg", ".txt"));
-            String command = String.format("whisper %s -o %s --model %s --language %s -f txt",
-                    path, path.getParent(), whisperModule, lang);
+            String command = String.format("whisper %s -o %s --model %s -f txt",
+                    path, path.getParent(), whisperModule);
             Process process = new ProcessBuilder(command.split(" ")).start();
             var stop = process.waitFor(1, TimeUnit.MINUTES);
             if (!stop) {

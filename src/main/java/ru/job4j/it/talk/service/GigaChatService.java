@@ -185,9 +185,8 @@ public class GigaChatService {
         var key = "NGVkOWYyMjQtZmFlNy00YTc0LThlMDYtYWM5ZTExNDJlMGY0OjQ4OTdlM2E1LTg1MmQtNDUzNy1iNGIyLTNlZjFhZGNiZDEzYQ==";
         var req = new Prompt(new MarkDown()).checkAnswer(
                 "1.4. Lambda, Stream API, JDK Features.",
-                "Что такое ссылки на конструкторы?",
-                "Ссылки на конструкторы это такие конструкции языка, которые позволяют использовать конструкторы, создавать вернее конструкторы без использования ключевого слова New.\n"
-                        + "Синдекси следующей мы должны написать имя, далее пишем 2 точья 2 раза, потом пишем весь и это позволяет нам создавать конструкции автоматически."
+                "Расскажите о зоне видимости переменных в lambda - выражениях?",
+                ""
         );
         var resp = new GigaChatService(new GigaAuth(key))
                 .callWithoutSystem(
