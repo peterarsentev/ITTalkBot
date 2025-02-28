@@ -16,19 +16,32 @@ public class TopicsHandle implements CallBackHandle {
 
     @Override
     public boolean check(String data) {
-        return "topics".equals(data);
+        return "topics".equals(data) || data.startsWith("navigate_topic_");
     }
 
     @Override
     public void process(Update update, ContentSender receive) {
+        var page = 0;
         var data = update.getCallbackQuery().getData();
         var user = userService.findByClientId(update.getCallbackQuery().getFrom().getId()).get();
-        receive.sentAsync(
-                Content.of()
-                        .chatId(user.getChatId())
-                        .text("*Выберите тему:*")
-                        .buttons(tgButtons.topics())
-                        .build()
-        );
+        if (data.startsWith("navigate_topic_")) {
+            page = Integer.parseInt(data.substring("navigate_topic_".length()));
+            receive.sentAsync(
+                    Content.of()
+                            .chatId(user.getChatId())
+                            .text("*Выберите тему:*")
+                            .updateMessageId(update.getCallbackQuery().getMessage().getMessageId())
+                            .buttons(tgButtons.topics(page))
+                            .build()
+            );
+        } else {
+            receive.sentAsync(
+                    Content.of()
+                            .chatId(user.getChatId())
+                            .text("*Выберите тему:*")
+                            .buttons(tgButtons.topics(page))
+                            .build()
+            );
+        }
     }
 }

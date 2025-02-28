@@ -18,25 +18,43 @@ public class TgButtons {
     private final TopicService topicService;
     private final QuestionService questionService;
 
-    public List<List<InlineKeyboardButton>> topics() {
+    public List<List<InlineKeyboardButton>> topics(int page) {
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
-        for (var topic : topicService.findAll()) {
+        var topics = topicService.findByPage(page);
+        for (var topic : topics.getTopics()) {
             keyboard.add(List.of(createBtn(topic.getName(), "topic_" + topic.getId())));
         }
-        keyboard.addAll(hide());
+        var btn = new ArrayList<InlineKeyboardButton>();
+        btn.add(createBtn("↩️ Скрыть", "hide"));
+        if (topics.getPage() > 0) {
+            btn.add(createBtn("\u2B05️ Назад", "navigate_topic_" + (topics.getPage() - 1)));
+        }
+        if (topics.getPage() + 1 <= topics.getTotal()) {
+            btn.add(createBtn("\u27A1️ Вперед", "navigate_topic_" + (topics.getPage() + 1)));
+        }
+        keyboard.add(btn);
         return keyboard;
     }
 
-    public List<List<InlineKeyboardButton>> questionsByTopicId(Long topicId) {
+    public List<List<InlineKeyboardButton>> questionsByTopicId(int topicId, int page) {
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
-        var questions = questionService.findByTopicId(topicId);
-        if (questions.size() > 20) {
-            questions = questions.subList(0, 20);
+        var questions = questionService.findByPage(topicId, page);
+        var index = page * 10 + 1;
+        for (var question : questions.getQuestions()) {
+            keyboard.add(List.of(createBtn(index++ + ". " + question.getQuestionTitle(),
+                    "question_" + question.getQuestionId())));
         }
-        for (var question : questions) {
-            keyboard.add(List.of(createBtn(question.getQuestionTitle(), "question_" + question.getQuestionId())));
+        var btn = new ArrayList<InlineKeyboardButton>();
+        btn.add(createBtn("↩️ Скрыть", "hide"));
+        if (questions.getPage() > 0) {
+            btn.add(createBtn("\u2B05️ Назад",
+                    "navigate_questions_" + topicId + "_" + (questions.getPage() - 1)));
         }
-        keyboard.addAll(navigate());
+        if (questions.getPage() + 1 <= questions.getTotal()) {
+            btn.add(createBtn("\u27A1️ Вперед",
+                    "navigate_questions_" + topicId + "_" + (questions.getPage() + 1)));
+        }
+        keyboard.add(btn);
         return keyboard;
     }
 
@@ -76,11 +94,34 @@ public class TgButtons {
         return keyboard;
     }
 
-    public List<List<InlineKeyboardButton>> learn(Long topicId, Long questionId) {
+    public List<List<InlineKeyboardButton>> learn(Long topicId, Long questionId,
+                                                  Integer previousId, Integer nextId) {
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
-        keyboard.add(List.of(
-                createBtn("\uD83D\uDCCC К вопросам", "topic_" + topicId),
-                createBtn("🎓 Изучить", "learn_question_" + questionId)));
+        var btn = new ArrayList<InlineKeyboardButton>();
+        btn.add(createBtn("📌 Тема", "topic_" + topicId));
+        btn.add(createBtn("🎓 Изучить", "learn_question_" + questionId));
+        if (previousId != null) {
+            btn.add(createBtn("⬅", "navigate_question_" + previousId));
+        }
+        if (nextId != null) {
+            btn.add(createBtn("➡", "navigate_question_" + nextId));
+        }
+        keyboard.add(btn);
+        return keyboard;
+    }
+
+    public List<List<InlineKeyboardButton>> answerNavigate(Long topicId,
+                                                  Integer previousId, Integer nextId) {
+        List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
+        var btn = new ArrayList<InlineKeyboardButton>();
+        btn.add(createBtn("📌 Тема", "topic_" + topicId));
+        if (previousId != null) {
+            btn.add(createBtn("⬅", "after_answer_question_" + previousId));
+        }
+        if (nextId != null) {
+            btn.add(createBtn("➡", "after_answer_question_" + nextId));
+        }
+        keyboard.add(btn);
         return keyboard;
     }
 
@@ -97,7 +138,7 @@ public class TgButtons {
         return keyboard;
     }
 
-    public List<List<InlineKeyboardButton>> navigate() {
+    public List<List<InlineKeyboardButton>> navigate(Long topicId, int page) {
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
         keyboard.add(List.of(
                 createBtn("\uD83D\uDCCC К темам", "topics"), // Иконка для "К темам"

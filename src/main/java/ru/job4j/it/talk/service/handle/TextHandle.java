@@ -38,8 +38,7 @@ public class TextHandle {
                     + "2\uFE0F⃣ Запиши свой голосовой ответ  \n"
                     + "3\uFE0F⃣ Я переведу аудио в текст и проанализирую твой ответ \uD83D\uDCDD  \n"
                     + "4\uFE0F⃣ Предоставлю подробную обратную связь и рекомендации \uD83E\uDDD0  \n"
-                    + "\n"
-                    + "✅ Давай начнем готовиться к успеху!";
+                    + "\nВсего пользователей: " + userService.totalSize();
             receive.apply(
                     Content.of()
                             .chatId(chatId)
@@ -72,7 +71,7 @@ public class TextHandle {
                     Content.of()
                             .chatId(chatId)
                             .text("*Выберите тему:*")
-                            .buttons(tgButtons.topics())
+                            .buttons(tgButtons.topics(0))
                             .build()
             );
         } else if ("/situation".equalsIgnoreCase(text) || "📝 Ситуация".equalsIgnoreCase(text)) {

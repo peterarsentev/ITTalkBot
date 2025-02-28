@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import ru.job4j.it.talk.dto.Topic;
+import ru.job4j.it.talk.dto.TopicPage;
 
 import java.util.Collections;
 import java.util.List;
@@ -56,5 +57,22 @@ public class TopicService {
                 }
         );
         return response.getBody() != null ? response.getBody() : new Topic();
+    }
+
+    public TopicPage findByPage(int page) {
+        String uri = UriComponentsBuilder.fromUriString(apiUrl + "interviewTopic/byPage")
+                .queryParam("page", page)
+                .toUriString();
+        var headers = new HttpHeaders();
+        headers.add("Accept", "application/json"); // Указываем, что ожидаем JSON
+        var entity = new HttpEntity<>(headers);
+        var response = restTemplate.exchange(
+                uri,
+                HttpMethod.GET,
+                entity,
+                new ParameterizedTypeReference<TopicPage>() {
+                }
+        );
+        return response.getBody() != null ? response.getBody() : new TopicPage();
     }
 }

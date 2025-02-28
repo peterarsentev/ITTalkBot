@@ -26,8 +26,8 @@ public class UserService {
         userRepository.create(member.getChatId(), member.getClientId(), member.getName());
     }
 
-    public void saveConfig(Long userId, UserConfigKey key, String lang) {
-        userConfigRepository.saveUserConfig(userId, key.key, lang);
+    public void saveConfig(Long userId, UserConfigKey key, String value) {
+        userConfigRepository.saveUserConfig(userId, key.key, value);
     }
 
     public Optional<UserConfig> findUserConfigByKey(Long userId, UserConfigKey key) {
@@ -45,5 +45,9 @@ public class UserService {
             create(member);
         }
         return findByClientId(client.getId()).get();
+    }
+
+    public long totalSize() {
+        return userRepository.count();
     }
 }

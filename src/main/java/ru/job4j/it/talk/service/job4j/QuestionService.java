@@ -8,8 +8,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
-import ru.job4j.it.talk.dto.Question;
-import ru.job4j.it.talk.dto.QuestionLite;
+import ru.job4j.it.talk.dto.*;
 
 import java.util.Collections;
 import java.util.List;
@@ -77,5 +76,42 @@ public class QuestionService {
                 }
         );
         return response.getBody() != null ? response.getBody() : new Question();
+    }
+
+    public QuestionPage findByPage(int topicId, int page) {
+        String uri = UriComponentsBuilder.fromUriString(apiUrl + "interviewQuestion/byPage")
+                .queryParam("page", page)
+                .queryParam("topicId", topicId)
+                .queryParam("sessionId", -1)
+                .toUriString();
+        var headers = new HttpHeaders();
+        headers.add("Accept", "application/json"); // Указываем, что ожидаем JSON
+        var entity = new HttpEntity<>(headers);
+        var response = restTemplate.exchange(
+                uri,
+                HttpMethod.GET,
+                entity,
+                new ParameterizedTypeReference<QuestionPage>() {
+                }
+        );
+        return response.getBody() != null ? response.getBody() : new QuestionPage();
+    }
+
+    public QuestionNavigate findNavigateById(Long questionId) {
+        String uri = UriComponentsBuilder.fromUriString(apiUrl + "interviewQuestion/findNavigateById")
+                .queryParam("questionId", questionId)
+                .queryParam("sessionId", questionId)
+                .toUriString();
+        var headers = new HttpHeaders();
+        headers.add("Accept", "application/json"); // Указываем, что ожидаем JSON
+        var entity = new HttpEntity<>(headers);
+        var response = restTemplate.exchange(
+                uri,
+                HttpMethod.GET,
+                entity,
+                new ParameterizedTypeReference<QuestionNavigate>() {
+                }
+        );
+        return response.getBody() != null ? response.getBody() : new QuestionNavigate();
     }
 }

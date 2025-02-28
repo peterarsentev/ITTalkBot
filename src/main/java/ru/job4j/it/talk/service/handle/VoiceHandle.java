@@ -62,11 +62,11 @@ public class VoiceHandle {
             );
             return;
         }
-        var question = questionService.findById(Long.parseLong(questionId.get().getValue()));
-        var topic = topicService.findById(question.getTopicId());
+        var question = questionService.findNavigateById(Long.parseLong(questionId.get().getValue()));
+        var topic = topicService.findById(question.getQuestion().getTopicId());
         var req = new Prompt(new MarkDown()).checkAnswer(
                 topic.getName(),
-                question.getDescription(),
+                question.getQuestion().getDescription(),
                 originText
         );
         var botText = gigaChatService.callWithoutSystem(req, chatId);
@@ -74,6 +74,9 @@ public class VoiceHandle {
                 Content.of()
                         .chatId(chatId)
                         .text(String.format("🗣️ *Бот [%s]*:\n%s", lang, botText))
+                        .buttons(tgButtons.answerNavigate(topic.getId(),
+                                question.getPreviousId(),
+                                question.getNextId()))
                         .build()
         );
         receive.apply(
