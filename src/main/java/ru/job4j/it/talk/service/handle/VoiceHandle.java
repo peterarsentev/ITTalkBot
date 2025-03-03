@@ -45,10 +45,9 @@ public class VoiceHandle {
                         .deleteMessageId(analyzeMessageId).build()
         );
         var resp = String.format("🗣️ *Вы [%s]*:\n%s ", lang, originText);
-        var recognitionMessageId = receive.apply(
+        receive.apply(
                 Content.of().chatId(chatId).text(resp).build()
         );
-        analyze.processVoice(user, originVoice, originText, lang, recognitionMessageId, "", receive);
         var botCallMessageId = receive.apply(
                 Content.of().chatId(chatId).text("🔄 _Генерирую ответ..._").build()
         );

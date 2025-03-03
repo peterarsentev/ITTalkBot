@@ -7,8 +7,12 @@ import ru.job4j.it.talk.config.UserConfigKey;
 import ru.job4j.it.talk.content.Content;
 import ru.job4j.it.talk.model.UserConfig;
 import ru.job4j.it.talk.service.*;
+import ru.job4j.it.talk.service.job4j.QuestionService;
+import ru.job4j.it.talk.service.job4j.TopicService;
+import ru.job4j.it.talk.service.ui.Prompt;
 import ru.job4j.it.talk.service.ui.TgButtons;
 import ru.job4j.it.talk.service.util.LevelLangPrompt;
+import ru.job4j.it.talk.service.util.MarkDown;
 
 import java.nio.file.Path;
 import java.util.function.Function;
@@ -20,9 +24,9 @@ public class TextHandle {
     private final TgButtons tgButtons;
     private final Analyze analyze;
     private final GigaChatService gigaChatService;
-    private final TextToSpeech textToSpeech;
+    private final QuestionService questionService;
     private final StatisticService statisticService;
-    private final LevelLangPrompt levelLangPrompt;
+    private final TopicService topicService;
 
     public void process(Path userDir, Message message,
                         Function<Content, Integer> receive) {
@@ -104,67 +108,60 @@ public class TextHandle {
                             .build()
             );
         } else {
-            textProcess(userDir, chatId, message, receive);
+            textProcess(chatId, message, receive);
         }
     }
 
-    public void textProcess(Path userDir, Long chatId,
+    public void textProcess(Long chatId,
                         Message message,
                         Function<Content, Integer> receive) {
         var user = userService.findOrCreateUser(message);
         var analyzeMessageId = receive.apply(
                 Content.of().chatId(chatId)
                         .text("🔄 _Анализирую сообщение ..._").build());
-        var lang = userService.findUserConfigByKey(user.getId(), UserConfigKey.TARGET_LANG)
-                .orElse(new UserConfig(-1L, user, UserConfigKey.TARGET_LANG.key, "en"))
-                .getValue();
-        var level = userService.findUserConfigByKey(user.getId(), UserConfigKey.TARGET_LANG)
-                .orElse(new UserConfig(-1L, user, UserConfigKey.LEVEL_LANG.key, "A1"))
-                .getValue();
         var originText = message.getText();
         receive.apply(
                 Content.of().chatId(chatId)
                         .deleteMessageId(analyzeMessageId).build()
         );
-        var resp = String.format("🗣️ *Вы [%s]*:\n%s", lang, originText);
-        var recognitionMessageId = receive.apply(
-                Content.of().chatId(chatId).text(resp)
-                        .buttons(tgButtons.recommendationAndTranslation()).build()
-        );
-        analyze.processText(user, originText, lang, recognitionMessageId, "", receive);
-        var audioMessageId = receive.apply(
-                Content.of().chatId(chatId).text("🎙️ _Создаю аудио..._").build()
-        );
-        var mp3File = textToSpeech.process(userDir, message.getMessageId(), originText, lang);
+        var resp = String.format("🗣️ *Вы*:\n%s", originText);
         receive.apply(
-                Content.of().chatId(chatId)
-                        .voice(mp3File).build()
+                Content.of().chatId(chatId).text(resp).build()
         );
+        var botCallMessageId = receive.apply(
+                Content.of().chatId(chatId).text("🔄 _Генерирую ответ..._").build()
+        );
+        var questionId = userService.findUserConfigByKey(user.getId(), UserConfigKey.QUESTION_ID);
+        if (questionId.isEmpty()) {
+            receive.apply(
+                    Content.of()
+                            .chatId(chatId)
+                            .text("Выберите вопрос.")
+                            .build()
+            );
+            return;
+        }
+        var question = questionService.findNavigateById(Long.parseLong(questionId.get().getValue()));
+        var topic = topicService.findById(question.getQuestion().getTopicId());
+        var req = new Prompt(new MarkDown()).checkAnswer(
+                topic.getName(),
+                question.getQuestion().getDescription(),
+                originText
+        );
+        var botText = gigaChatService.callWithoutSystem(req, chatId);
         receive.apply(
-                Content.of().chatId(chatId)
-                        .deleteMessageId(audioMessageId).build()
-        );
-        var botText = gigaChatService.callRole(levelLangPrompt.prompt(level), originText, chatId);
-        var botMessageId = receive.apply(
                 Content.of()
                         .chatId(chatId)
-                        .text(String.format("🗣️ *Бот [%s]*:\n%s", lang, botText))
+                        .text(String.format("🗣️ *Бот*:\n%s", botText))
+                        .buttons(tgButtons.answerNavigate(topic.getId(),
+                                question.getPreviousId(),
+                                question.getNextId()))
                         .build()
         );
-        var audioBotMessageId = receive.apply(
-                Content.of().chatId(chatId).text("🎙️ _Создаю аудио..._").build()
-        );
-        var mp3Bot = textToSpeech.process(userDir, botMessageId, botText, lang);
         receive.apply(
                 Content.of()
                         .chatId(chatId)
-                        .deleteMessageId(audioBotMessageId)
-                        .build()
-        );
-        receive.apply(
-                Content.of()
-                        .chatId(chatId)
-                        .voice(mp3Bot)
+                        .deleteMessageId(botCallMessageId)
                         .build()
         );
     }

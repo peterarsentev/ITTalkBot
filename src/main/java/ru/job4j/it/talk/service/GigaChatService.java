@@ -17,6 +17,7 @@ import java.io.BufferedReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -162,12 +163,14 @@ public class GigaChatService {
         return null;
     }
 
-    public String callWithoutSystem(String text, Long chatId) {
+    public String callWithoutSystem(List<String> data, Long chatId) {
         var messages = new JSONArray();
-        var message = new JSONObject();
-        message.put("role", "user");
-        message.put("content", text);
-        messages.put(message);
+        for (var text : data) {
+            var message = new JSONObject();
+            message.put("role", "user");
+            message.put("content", text);
+            messages.put(message);
+        }
         var req = new JSONObject();
         req.put("model", "GigaChat");
         req.put("stream", false);
