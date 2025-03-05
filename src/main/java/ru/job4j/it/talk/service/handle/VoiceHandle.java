@@ -6,11 +6,13 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import ru.job4j.it.talk.config.UserConfigKey;
 import ru.job4j.it.talk.content.Content;
-import ru.job4j.it.talk.service.*;
+import ru.job4j.it.talk.service.ContentSender;
+import ru.job4j.it.talk.service.GigaChatService;
+import ru.job4j.it.talk.service.SpeechToText;
+import ru.job4j.it.talk.service.UserService;
 import ru.job4j.it.talk.service.job4j.QuestionService;
 import ru.job4j.it.talk.service.job4j.TopicService;
 import ru.job4j.it.talk.service.ui.Prompt;
-import ru.job4j.it.talk.service.ui.TgButtons;
 import ru.job4j.it.talk.service.util.MarkDown;
 
 import java.nio.file.Path;
@@ -23,37 +25,34 @@ public class VoiceHandle {
     private final UserService userService;
     private final GigaChatService gigaChatService;
     private final SpeechToText speechToText;
-    private final Analyze analyze;
-    private final TgButtons tgButtons;
-    private final TextToSpeech textToSpeech;
     private final TopicService topicService;
     private final QuestionService questionService;
-    private final MarkDown md5Corrector;
+    private final MarkDown markDown;
 
     public void process(Long chatId,
                         Message message,
                         Path originVoice,
-                        Function<Content, Integer> receive) {
+                        ContentSender receive) {
         var user = userService.findOrCreateUser(message);
-        var analyzeMessageId = receive.apply(
+        var analyzeMessageId = receive.sent(
                 Content.of().chatId(chatId)
                         .text("🔄 _Анализирую голосовое сообщение ..._").build());
         var lang = "ru";
         var originText = speechToText.convert(originVoice, lang);
-        receive.apply(
+        receive.sent(
                 Content.of().chatId(chatId)
                         .deleteMessageId(analyzeMessageId).build()
         );
         var resp = String.format("🗣️ *Вы [%s]*:\n%s ", lang, originText);
-        receive.apply(
+        receive.sent(
                 Content.of().chatId(chatId).text(resp).build()
         );
-        var botCallMessageId = receive.apply(
+        var botCallMessageId = receive.sent(
                 Content.of().chatId(chatId).text("🔄 _Генерирую ответ..._").build()
         );
         var questionId = userService.findUserConfigByKey(user.getId(), UserConfigKey.QUESTION_ID);
         if (questionId.isEmpty()) {
-            receive.apply(
+            receive.sent(
                     Content.of()
                             .chatId(chatId)
                             .text("Выберите вопрос.")
@@ -68,17 +67,27 @@ public class VoiceHandle {
                 question.getQuestion().getDescription(),
                 originText
         );
-        var botText = gigaChatService.callWithoutSystem(req, chatId);
-        receive.apply(
-                Content.of()
-                        .chatId(chatId)
-                        .text(String.format("🗣️ *Бот [%s]*:\n%s", lang, botText))
-                        .buttons(tgButtons.answerNavigate(topic.getId(),
-                                question.getPreviousId(),
-                                question.getNextId()))
-                        .build()
+        var text = markDown.html2md(String.format("🗣️ *Бот [%s]*:\n%s", lang,
+                gigaChatService.callWithoutSystem(req, chatId))
         );
-        receive.apply(
+        int maxMessageLength = 4096;
+        while (text.length() > maxMessageLength) {
+            String part = text.substring(0, maxMessageLength);
+            receive.sent(
+                    Content.of()
+                            .chatId(user.getChatId())
+                            .text(part)
+                            .build());
+            text = text.substring(maxMessageLength);
+        }
+        if (!text.isEmpty()) {
+            receive.sent(
+                    Content.of()
+                            .chatId(user.getChatId())
+                            .text(text)
+                            .build());
+        }
+        receive.sent(
                 Content.of()
                         .chatId(chatId)
                         .deleteMessageId(botCallMessageId)

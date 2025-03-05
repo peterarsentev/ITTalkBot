@@ -77,13 +77,13 @@ public class ReceiveUpdateService extends TelegramLongPollingBot
         }
         var userFolder = Path.of(voiceDir, update.getMessage().getChatId().toString());
         if (update.getMessage().hasText()) {
-            textHandle.process(userFolder, update.getMessage(), this::sent);
+            textHandle.process(userFolder, update.getMessage(), this);
         } else if (update.getMessage().hasVoice()) {
             voiceHandle.process(
                     update.getMessage().getChatId(),
                     update.getMessage(),
                     downloadVoice(update),
-                    this::sent
+                    this
             );
         }
     }

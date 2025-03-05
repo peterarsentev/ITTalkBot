@@ -16,7 +16,7 @@ import java.util.function.Function;
 public class StatisticService {
     private TgButtons tgButtons;
 
-    public void process(User user, Function<Content, Integer> receive) {
+    public void process(User user, ContentSender receive) {
     }
 
     public String flagEmoji(String lang) {
