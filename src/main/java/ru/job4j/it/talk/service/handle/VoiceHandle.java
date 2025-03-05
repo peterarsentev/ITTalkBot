@@ -16,7 +16,6 @@ import ru.job4j.it.talk.service.ui.Prompt;
 import ru.job4j.it.talk.service.util.MarkDown;
 
 import java.nio.file.Path;
-import java.util.function.Function;
 
 @Service
 @AllArgsConstructor
@@ -27,7 +26,6 @@ public class VoiceHandle {
     private final SpeechToText speechToText;
     private final TopicService topicService;
     private final QuestionService questionService;
-    private final MarkDown markDown;
 
     public void process(Long chatId,
                         Message message,
@@ -67,8 +65,8 @@ public class VoiceHandle {
                 question.getQuestion().getDescription(),
                 originText
         );
-        var text = markDown.html2md(String.format("🗣️ *Бот [%s]*:\n%s", lang,
-                gigaChatService.callWithoutSystem(req, chatId))
+        var text = String.format("🗣️ *Бот*:\n%s",
+                gigaChatService.callWithoutSystem(req, chatId)
         );
         int maxMessageLength = 4096;
         while (text.length() > maxMessageLength) {

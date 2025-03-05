@@ -26,7 +26,6 @@ public class TextHandle {
     private final QuestionService questionService;
     private final StatisticService statisticService;
     private final TopicService topicService;
-    private final MarkDown markDown;
 
     public void process(Path userDir, Message message,
                         ContentSender receive) {
@@ -148,8 +147,8 @@ public class TextHandle {
                 question.getQuestion().getDescription(),
                 originText
         );
-        var text = markDown.html2md(String.format("🗣️ *Бот*:\n%s",
-                gigaChatService.callWithoutSystem(req, chatId))
+        var text = String.format("🗣️ *Бот*:\n%s",
+                gigaChatService.callWithoutSystem(req, chatId)
         );
         int maxMessageLength = 4096;
         while (text.length() > maxMessageLength) {
